@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Ares.Gameserver/Ares.vcxproj" Id="73e4e60e-8352-48cd-bd0e-2a6c1fd6c426" />
+</Solution>
