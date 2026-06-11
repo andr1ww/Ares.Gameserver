@@ -270,16 +270,6 @@ public:
 	TUObjectArrayWrapper& operator=(const TUObjectArrayWrapper&) = delete;
 
 private:
-    static inline uint64_t BitReverse64(uint64_t x)
-    {
-        x = ((x << 1) & 0x5555555555555555ULL) | ((x >> 1) & 0x5555555555555555ULL);
-        x = ((x << 2) & 0x3333333333333333ULL) | ((x >> 2) & 0x3333333333333333ULL);
-        x = ((x << 4) & 0xF0F0F0F0F0F0F0F0ULL) | ((x >> 4) & 0x0F0F0F0F0F0F0F0FULL);
-        x = ((x << 8) & 0xFF00FF00FF00FF00ULL) | ((x >> 8) & 0x00FF00FF00FF00FFULL);
-        x = std::rotl(x, 32);
-        return x;
-    }
-
 	static inline uint64_t DecryptPointer(__int64 a1)
 	{
 		uint32_t seed = *(uint32_t*)(a1 + 120);
@@ -303,16 +293,20 @@ private:
 		{
 			uint8_t rotamt = (uint8_t)((uint32_t)v7 % 0x3F) + 1;
 			v10 = std::rotl(~(uint64_t)(uint32_t)(v7 - 1) ^ v9, rotamt);
-		}
-		else if (v11 == 1)
-		{
-			v10 = BitReverse64(v9);
-		}
-		else if (v11 == 2)
-		{
-			uint8_t rotamt = (uint8_t)(((int32_t)v7 + 2 * (int32_t)v8) % 0x3F) + 1;
-			v10 = (uint64_t)(uint32_t)v12 + std::rotl(v9, rotamt);
-		}
+        }
+        else if (v11 == 1)
+        {
+            uint64_t t = v9;
+            t = ((t << 2) & 0xCCCCCCCCCCCCCCCCULL) | ((t >> 2) & 0x3333333333333333ULL);
+            t = ((t << 4) & 0xF0F0F0F0F0F0F0F0ULL) | ((t >> 4) & 0x0F0F0F0F0F0F0F0FULL);
+            t = ((t << 8) & 0xFF00FF00FF00FF00ULL) | ((t >> 8) & 0x00FF00FF00FF00FFULL);
+            v10 = std::rotl(t, 32);
+        }
+        else if (v11 == 2)
+        {
+            uint8_t rotamt = (uint8_t)(((uint32_t)v7 + 2 * (uint32_t)v8) % 0x3F) + 1;
+            v10 = (uint64_t)(uint32_t)v12 + std::rotl(v9, rotamt);
+        }
 
 		if (v11 == 3)
 		{

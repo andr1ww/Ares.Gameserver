@@ -163,6 +163,8 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Hooking\hde64.cpp" />
+    <ClCompile Include="Source\Hooking\Hooking.cpp" />
     <ClCompile Include="Source\Launch.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -176,6 +178,10 @@
     <ClCompile Include="SDK\ShooterGame_functions.cpp" />
     <ClCompile Include="Source\Modules\Engine\World.cpp" />
     <ClCompile Include="Source\Shared.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Headers\Modules\ShooterGame\.gitkeep" />
+    <None Include="Source\Modules\ShooterGame\.gitkeep" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

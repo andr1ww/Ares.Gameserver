@@ -164,18 +164,21 @@ bool UStruct::IsSubclassOf(const UStruct* Base) const
 // Predefined Function
 // Gets a UFunction from this UClasses' 'Children' list
 
-class UFunction* UClass::FindFunction(const char *FuncName) const
+class UFunction* UClass::FindFunction(const char* FuncName) const
 {
-	for(const UStruct* Clss = this; Clss; Clss = Clss->Super)
-	{
-		for (UField* Field = Clss->Children; Field; Field = Field->Next)
-		{
-			if(Field->HasTypeFlag(EClassCastFlags::Function) && Field->GetName() == FuncName)
-				return static_cast<class UFunction*>(Field);
-		}
-	}
+    std::string FuncNameStr = FuncName;
+    auto FuncFName = FName(std::wstring(FuncNameStr.begin(), FuncNameStr.end()));
 
-	return nullptr;
+    for (const UStruct* Clss = this; Clss; Clss = Clss->Super)
+    {
+        for (UField* Field = Clss->Children; Field; Field = Field->Next)
+        {
+            if (Field->HasTypeFlag(EClassCastFlags::Function) && Field->Name == FuncFName)
+                return static_cast<class UFunction*>(Field);
+        }
+    }
+
+    return nullptr;
 }
 
 

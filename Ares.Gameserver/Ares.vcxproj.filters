@@ -53,5 +53,15 @@
     <ClCompile Include="Source\Modules\Engine\World.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Hooking\Hooking.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Hooking\hde64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Modules\ShooterGame\.gitkeep" />
+    <None Include="Headers\Modules\ShooterGame\.gitkeep" />
   </ItemGroup>
 </Project>
