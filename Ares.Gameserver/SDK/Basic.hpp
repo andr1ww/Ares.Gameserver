@@ -824,6 +824,36 @@ class TMulticastInlineDelegate<Ret(Args...)>
 {
 public:
 	TArray<FScriptDelegate>                       InvocationList;                                    // 0x0000(0x0010)(NOT AUTO-GENERATED PROPERTY)
+
+public:
+    void Process(Args... args)
+    {
+        struct Params
+        {
+            std::tuple<std::remove_reference_t<Args>...> Data;
+            Params(Args&&... args)
+                : Data(std::forward<Args>(args)...)
+            {
+            }
+        } Arg(std::forward<Args>(args)...);
+
+        for (int i = 0; i < InvocationList.Num(); i++)
+        {
+            auto& ScriptDelegate = InvocationList[i];
+
+            ScriptDelegate.Object->ProcessEvent(ScriptDelegate.Object->Class->FindFunction(ScriptDelegate.FunctionName.ToString().c_str()), &Arg);
+        }
+    }
+
+    void Bind(UObject* Object, FName FunctionName)
+    {
+        FScriptDelegate NewDelegate;
+
+        NewDelegate.Object = Object;
+        NewDelegate.FunctionName = FunctionName;
+
+        InvocationList.Add(NewDelegate);
+    }
 };
 
 #define UE_ENUM_OPERATORS(EEnumClass)																																	\

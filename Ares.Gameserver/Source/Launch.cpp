@@ -1,5 +1,31 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
+#include <fstream>
+
+static void* (*ProcessEventOG)(UObject*, UFunction*, void*);
+static std::vector<std::string> LoggedFunctions;
+void* ProcessEvent(UObject* Obj, UFunction* Function, void* Params)
+{
+    static bool firstCall = true;
+    static std::ofstream logFile("Ares_PE.log", firstCall ? std::ios::trunc : std::ios::app);
+    if (firstCall)
+        firstCall = false;
+
+    if (Function)
+    {
+        std::string FunctionName = Function->GetFullName();
+
+        if (std::find(LoggedFunctions.begin(), LoggedFunctions.end(), FunctionName) == LoggedFunctions.end())
+        {
+            printf("[ProcessEvent] %s\n", FunctionName.c_str());
+            LoggedFunctions.push_back(FunctionName);
+        }
+
+        logFile << FunctionName << std::endl;
+    }
+
+    return ProcessEventOG(Obj, Function, Params);
+}
 
 void MainThread()
 {
@@ -11,8 +37,10 @@ void MainThread()
     *(bool*)(ImageBase + 0x6C67BE9) = false; // GIsClient
     *(bool*)(ImageBase + 0x6C67BEA) = true;  // GIsServer
 
+    Hooking::Hook(ImageBase + Offsets::ProcessEvent, ProcessEvent, ProcessEventOG);
+
     printf("[Runtime] Opening ascent!\n");
-    UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Poveglia/Range")), true, TEXT("game=/Game/GameModes/ShootingRange/ShootingRangeGameMode.ShootingRangeGameMode_C"));
+    UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Ascent/Ascent")), true, TEXT(""));
     //UWorld::GetWorld()->OwningGameInstance->LocalPlayers.Remove(0);
 }
 

@@ -4,10 +4,11 @@ INIT_MODULE(ShooterGameMode);
 
 bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
 {
+    AShooterGameState* GameState = _this->GameState->Cast<AShooterGameState>();
+
     static bool bInit = false;
     if (!bInit)
     {
-        AShooterGameState* GameState = _this->GameState->Cast<AShooterGameState>();
         GameState->MatchInfo.MatchID = L"88a1b12a-52ac-42b6-b443-a59bee67977e";
         AAresWorldSettings* WorldSettings = UWorld::GetWorld()->K2_GetWorldSettings()->Cast<AAresWorldSettings>();
         for (auto Level : WorldSettings->GetSublevelsToStreamForGameMode(_this->Class, _this->GameModeSublevelKeys))
@@ -25,7 +26,27 @@ bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
     if (bReady)
     {
         _this->AuthStartMatch();
+        _this->OnRoundPlayersReady.Process();
         printf("[Runtime] Match started!\n");
+
+        auto WarmupClass = FindObject<UClass>(L"/Game/GameModes/Components/GameStateComponents/GameStateIntroComponent.GameStateIntroComponent_C");
+
+        auto WarmupComp = (UTimeGameStateComponent*)UGameplayStatics::SpawnObject(WarmupClass, GameState);
+        GameState->BlueprintCreatedComponents.Add(WarmupComp);
+        //        WarmupComp->RegisterComponent();
+        _this->StateMachine->AddState(WarmupComp);
+        _this->StateMachine->SetStartingState(WarmupComp);
+        _this->StateMachine->InitializeStartingState(_this);
+
+        std::thread([]()
+            {
+                std::this_thread::sleep_for(std::chrono::seconds(5));
+                AShooterPlayerController* PC = UWorld::GetWorld()->NetDriver->ClientConnections[0]->PlayerController->Cast<AShooterPlayerController>();
+                PC->ServerSetDesiredClass(L"Phoenix");
+                PC->ServerSetTeam(L"Blue");
+                PC->Respawn();
+                PC->AuthPossessSpawnedCharacter();
+            }).detach();
     }
     return bReady;
 }
