@@ -161,14 +161,23 @@ ULevel* GetLevel(AActor* Actor)
     return nullptr;
 }
 
+static FNetworkObjectList& GetNetworkObjectList(UNetDriver* Driver)
+{
+    return *(*(class TSharedPtr<FNetworkObjectList>*)(__int64(Driver) + 0x758));
+}
+
+
 void NetDriver::ServerReplicateActors_BuildConsiderList(UNetDriver* _this, std::vector<AActor*>& OutConsiderList, const float ServerTickTime)
 {
     static void (*CallPreReplication)(AActor* Actor, UNetDriver* Driver) = decltype(CallPreReplication)(ImageBase + 0x3230F70);
-    TArray<AActor*> Actors;
-    UGameplayStatics::GetAllActorsOfClass(UWorld::GetWorld(), AActor::StaticClass(), &Actors);
 
-    for (auto& Actor : Actors)
+    for (const TSharedPtr<FNetworkObjectInfo>& ObjectInfo : GetNetworkObjectList(_this).ActiveNetworkObjects)
     {
+        FNetworkObjectInfo* ActorInfo = ObjectInfo.Get();
+        if (!ActorInfo)
+            continue;
+
+        AActor* Actor = ActorInfo->Actor;
         if (!Actor || Actor->NetDriverName != _this->NetDriverName)
             continue;
 
@@ -179,6 +188,8 @@ void NetDriver::ServerReplicateActors_BuildConsiderList(UNetDriver* _this, std::
         ULevel* Level = GetLevel(Actor);
         if (!Level || Level == Level->OwningWorld->CurrentLevelPendingVisibility || Level == Level->OwningWorld->CurrentLevelPendingInvisibility)
             continue;
+
+        ActorInfo->bPendingNetUpdate = true;
 
         OutConsiderList.push_back(Actor);
         CallPreReplication(Actor, _this);
