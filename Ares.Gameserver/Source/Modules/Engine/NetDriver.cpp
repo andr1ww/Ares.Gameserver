@@ -17,6 +17,7 @@ int32 NetDriver::ServerReplicateActors(UNetDriver* _this, float DeltaSeconds)
         return 0;
     }
 
+    ++*(int32*)(__int64(_this) + 0x30C);
     //ReplicationFrame++;
 
     const int32 NumClientsToTick = ServerReplicateActors_PrepConnections(_this, DeltaSeconds);
