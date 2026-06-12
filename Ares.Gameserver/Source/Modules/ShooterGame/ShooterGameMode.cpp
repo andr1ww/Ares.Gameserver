@@ -4,6 +4,22 @@ INIT_MODULE(ShooterGameMode);
 
 bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
 {
+    static bool bInit = false;
+    if (!bInit)
+    {
+        AShooterGameState* GameState = _this->GameState->Cast<AShooterGameState>();
+        GameState->MatchInfo.MatchID = L"88a1b12a-52ac-42b6-b443-a59bee67977e";
+        AAresWorldSettings* WorldSettings = UWorld::GetWorld()->K2_GetWorldSettings()->Cast<AAresWorldSettings>();
+        for (auto Level : WorldSettings->GetSublevelsToStreamForGameMode(_this->Class, _this->GameModeSublevelKeys))
+        {
+            bool Success = false;
+            FName LevelName = Level.ObjectID.AssetPathName;
+            ULevelStreamingDynamic::LoadLevelInstance(UWorld::GetWorld(), UKismetStringLibrary::Conv_NameToString(LevelName), FVector(), FRotator(), &Success);
+        }
+        bInit = true;
+        return false;
+    }
+
     printf("[Runtime] ReadyToStartMatch called, gamemode class: %s\n", _this->Class->GetName().c_str());
     bool bReady = UWorld::GetWorld()->NetDriver ? UWorld::GetWorld()->NetDriver->ClientConnections.Num() > 0 : false;
     if (bReady)
