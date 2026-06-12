@@ -5,6 +5,16 @@ INIT_MODULE(World);
 
 bool World::Listen(UWorld* _this)
 {
+    UEngine::GetEngine()->NetDriverDefinitions.Search([](FNetDriverDefinition& Def)
+    {
+        if (Def.DefName == FName(L"GameNetDriver"))
+        {
+            Def.DriverClassName = FString(L"/Script/OnlineSubsystemUtils.IpNetDriver");
+            return true;
+        }
+        return false;
+    });
+
     auto CreateNetDriver = (UNetDriver * (*)(UEngine*, UWorld*, FName))(ImageBase + 0x39F3C90);
     auto InitListen = (bool (*)(UNetDriver*, UWorld*, FURL*, bool, FString&))(ImageBase + 0x1451A00);
     auto SetWorld = (void (*)(UNetDriver*, UWorld*))(ImageBase + 0x37038B0);

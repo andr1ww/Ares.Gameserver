@@ -204,3 +204,9 @@ inline auto PickWeighted(IteratableType& Map, float (*RandFunc)(float), bool bCh
 
     return nullptr;
 }
+
+template <typename T>
+static inline void Set(uintptr_t Address, T Value)
+{
+    *reinterpret_cast<T*>(__int64(Address)) = Value;
+}

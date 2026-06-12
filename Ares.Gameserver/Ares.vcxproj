@@ -158,7 +158,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Headers\Modules\Engine\NetDriver.hpp" />
     <ClInclude Include="Headers\Modules\Engine\World.hpp" />
+    <ClInclude Include="Headers\Modules\ShooterGame\ShooterGameMode.hpp" />
     <ClInclude Include="Headers\Shared.hpp" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -176,7 +178,9 @@
     <ClCompile Include="SDK\CoreUObject_functions.cpp" />
     <ClCompile Include="SDK\Engine_functions.cpp" />
     <ClCompile Include="SDK\ShooterGame_functions.cpp" />
+    <ClCompile Include="Source\Modules\Engine\NetDriver.cpp" />
     <ClCompile Include="Source\Modules\Engine\World.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\ShooterGameMode.cpp" />
     <ClCompile Include="Source\Shared.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -12,7 +12,7 @@ void MainThread()
     *(bool*)(ImageBase + 0x6C67BEA) = true;  // GIsServer
 
     printf("[Runtime] Opening ascent!\n");
-    UWorld::GetWorld()->OwningGameInstance->LocalPlayers[0]->PlayerController->SwitchLevel(L"/Game/Maps/Ascent/Ascent");
+    UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Poveglia/Range")), true, TEXT("game=/Game/GameModes/ShootingRange/ShootingRangeGameMode.ShootingRangeGameMode_C"));
     //UWorld::GetWorld()->OwningGameInstance->LocalPlayers.Remove(0);
 }
 
