@@ -21,10 +21,13 @@ bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
         return false;
     }
 
+    static bool bFirst = true;
     printf("[Runtime] ReadyToStartMatch called, gamemode class: %s\n", _this->Class->GetName().c_str());
     bool bReady = UWorld::GetWorld()->NetDriver ? UWorld::GetWorld()->NetDriver->ClientConnections.Num() > 0 : false;
-    if (bReady)
+    if (bReady && bFirst)
     {
+        bFirst = false;
+
         UStateComponent* StateComponent = _this->StateMachine->GetCurrentState();
         if (StateComponent)
         {
@@ -69,8 +72,6 @@ bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
                         _this->DisablePlayerStartsByTagAndAlliance(TEXT("None"), Team, EAresAlliance::Alliance_Neutral);
                         _this->EnablePlayerStartsByTagAndAlliance(TEXT("None"), Team, EAresAlliance::Alliance_Ally);
 
-                                _this->StartMatch();
-                        _this->StartPlay();
                     }
                 }
             }
@@ -107,10 +108,16 @@ bool AuthIsServerStreamingLevels(AShooterGameMode* _this, FFrame* Stack, bool* R
     return *Ret = false;
 }
 
+UClass* GetDefaultPawnClassForController(AShooterGameMode* _this, AController* InController)
+{
+    return FindObject<UClass>(L"/Game/Characters/Wushu/Wushu_PC.Wushu_PC_C");
+}
+
 void ShooterGameMode::Init()
 {
     Hooking::Hook<AShooterGameMode>(0x838 / 8, ReadyToStartMatch);
     Hooking::Hook<AShooterGameMode>(0x668 / 8, SpawnDefaultPawnFor);
     Hooking::Hook<AShooterGameMode>(0x698 / 8, HandleStartingNewPlayer, HandleStartingNewPlayerOG);
+    Hooking::Hook<AShooterGameMode>(0x6A8 / 8, GetDefaultPawnClassForController);
     Hooking::ExecHook(FindObject<UFunction>(L"/Script/ShooterGame.ShooterGameMode.AuthIsServerStreamingLevels"), AuthIsServerStreamingLevels);
 }

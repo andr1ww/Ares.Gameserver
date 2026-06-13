@@ -40,8 +40,8 @@ void MainThread()
     Hooking::Hook(ImageBase + Offsets::ProcessEvent, ProcessEvent, ProcessEventOG);
 
     printf("[Runtime] Opening ascent!\n");
-    UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/PregameV2/CharacterSelectPersistentLevel")), true, TEXT(""));
-  //  UWorld::GetWorld()->OwningGameInstance->LocalPlayers.Remove(0);
+    UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Ascent/Ascent")), false, TEXT(""));
+   // UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/PregameV2/CharacterSelectPersistentLevel")), true, TEXT(""));
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)

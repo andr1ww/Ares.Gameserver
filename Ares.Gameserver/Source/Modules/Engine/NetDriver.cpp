@@ -7,6 +7,34 @@ void NetDriver::TickFlush(UNetDriver* _this, float DeltaTime)
 {
     ServerReplicateActors(_this, DeltaTime);
 
+    for (UNetConnection* Connection : _this->ClientConnections)
+    {
+        if (!Connection || !Connection->PlayerController)
+            continue;
+        AShooterPlayerController* PC = Connection->PlayerController->Cast<AShooterPlayerController>();
+        if (!PC)
+            continue;
+        static bool bFirst = true;
+        if (!bFirst)
+            continue;
+
+        if (bFirst)
+        {
+            printf("[Runtime] PlayerController: %s\n", PC->GetName().c_str());
+            bFirst = false;
+        }
+        _this->World->AuthorityGameMode->HandleStartingNewPlayer(PC);
+        FTransform Trans = UKismetMathLibrary::MakeTransform(FVector(0, 0, 1200), FRotator(), FVector(1));
+        AShooterCharacter* Pawn = (AShooterCharacter*)SpawnActor(_this->World->AuthorityGameMode->GetDefaultPawnClassForController(PC), Trans, PC,
+                                                                 ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn); //_this->SpawnDefaultPawnAtTransform(PC, Trans);
+                                                                                                                                      //       PC->Possess(Pawn);
+        PC->CachedShooterCharacter = Pawn->Cast<AShooterCharacter>();
+        PC->Pawn = Pawn;
+        PC->CachedShooterCharacter->SetOwner(PC);
+        _this->World->AuthorityGameMode->InitializeHUDForPlayer(PC);
+        PC->AuthPossessSpawnedCharacter();
+    }
+
     return TickFlushOG(_this, DeltaTime);
 }
 
