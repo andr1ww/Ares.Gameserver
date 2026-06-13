@@ -47,7 +47,7 @@ int32 NetDriver::ServerReplicateActors(UNetDriver* _this, float DeltaSeconds)
                 {
                  //   SendClientAdjustment(Connection->PlayerController);
                     int Count = ServerReplicateActors_ProcessActors(_this, Connection, ConsiderList);
-                    printf("[Runtime] replicated %d actors to client %d\n", Count, i);
+               //     printf("[Runtime] replicated %d actors to client %d\n", Count, i);
                 }
             }
         }

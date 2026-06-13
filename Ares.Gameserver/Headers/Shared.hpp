@@ -210,3 +210,31 @@ static inline void Set(uintptr_t Address, T Value)
 {
     *reinterpret_cast<T*>(__int64(Address)) = Value;
 }
+
+class FOutputDevice
+{
+public:
+    bool bSuppressEventTag;
+    bool bAutoEmitLineTerminator;
+    uint8_t _Padding1[0x6];
+};
+
+class FFrame : public FOutputDevice
+{
+public:
+    void** VTable;
+    UFunction* Node;
+    UObject* Object;
+    uint8* Code;
+    uint8* Locals;
+    void* MostRecentProperty;
+    uint8_t* MostRecentPropertyAddress;
+    uint8_t _Padding1[0x40];
+    UField* PropertyChainForCompiledIn;
+
+public:
+    void IncrementCode()
+    {
+        Code = (uint8_t*)(__int64(Code) + (bool)Code);
+    }
+};

@@ -25,28 +25,56 @@ bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
     bool bReady = UWorld::GetWorld()->NetDriver ? UWorld::GetWorld()->NetDriver->ClientConnections.Num() > 0 : false;
     if (bReady)
     {
-        _this->AuthStartMatch();
-        _this->OnRoundPlayersReady.Process();
-        printf("[Runtime] Match started!\n");
-
-        auto WarmupClass = FindObject<UClass>(L"/Game/GameModes/Components/GameStateComponents/GameStateIntroComponent.GameStateIntroComponent_C");
-
-        auto WarmupComp = (UTimeGameStateComponent*)UGameplayStatics::SpawnObject(WarmupClass, GameState);
-        GameState->BlueprintCreatedComponents.Add(WarmupComp);
-        //        WarmupComp->RegisterComponent();
-        _this->StateMachine->AddState(WarmupComp);
-        _this->StateMachine->SetStartingState(WarmupComp);
-        _this->StateMachine->InitializeStartingState(_this);
-
-        std::thread([]()
+        UStateComponent* StateComponent = _this->StateMachine->GetCurrentState();
+        if (StateComponent)
+        {
+            if (UTimeGameStateComponent* TimeState = StateComponent->Cast<UTimeGameStateComponent>())
             {
-                std::this_thread::sleep_for(std::chrono::seconds(5));
-                AShooterPlayerController* PC = UWorld::GetWorld()->NetDriver->ClientConnections[0]->PlayerController->Cast<AShooterPlayerController>();
-                PC->ServerSetDesiredClass(L"Phoenix");
-                PC->ServerSetTeam(L"Blue");
-                PC->Respawn();
-                PC->AuthPossessSpawnedCharacter();
-            }).detach();
+                printf("[Runtime] NextGameState: %s\n", TimeState->NextGameState->GetName().c_str());
+                _this->OnRoundPlayersReady.Process();
+                TimeState->SetNewTimeoutTime(0.05f);
+                UStateComponent* Next = nullptr;
+
+                for (auto& Pair : _this->StateMachine->States)
+                {
+                    UStateComponent* State = Pair.Key();
+                    if (!State)
+                        continue;
+
+                    std::string Name = State->GetName();
+
+                    if (Name.find("Setup") != std::string::npos)
+                    {
+                        Next = State;
+                        break;
+                    }
+                }
+
+                if (UTimeGameStateComponent* NextState = Next->Cast<UTimeGameStateComponent>())
+                {
+                    TimeState->GoToStateAndSkipTimedEvents(NextState, 0.05f);
+
+                    UFunction* ResetAllPlayers = _this->Class->FindFunction("ResetAllPlayers");
+                    if (ResetAllPlayers)
+                        _this->ProcessEvent(ResetAllPlayers, nullptr);
+                    _this->AuthResetRound(false);
+
+                    const TArray<UBaseTeamComponent*>& Teams = GameState->GetAllTeamComponents();
+
+                    for (UBaseTeamComponent* Team : Teams)
+                    {
+                        if (!Team)
+                            continue;
+
+                        _this->DisablePlayerStartsByTagAndAlliance(TEXT("None"), Team, EAresAlliance::Alliance_Neutral);
+                        _this->EnablePlayerStartsByTagAndAlliance(TEXT("None"), Team, EAresAlliance::Alliance_Ally);
+
+                                _this->StartMatch();
+                        _this->StartPlay();
+                    }
+                }
+            }
+        }
     }
     return bReady;
 }
@@ -73,9 +101,16 @@ void ShooterGameMode::HandleStartingNewPlayer(AShooterGameMode* _this, AAresPlay
     HandleStartingNewPlayerOG(_this, NewPlayer);
 }
 
+bool AuthIsServerStreamingLevels(AShooterGameMode* _this, FFrame* Stack, bool* Ret)
+{
+    printf("[Runtime] AuthIsServerStreamingLevels called");
+    return *Ret = false;
+}
+
 void ShooterGameMode::Init()
 {
     Hooking::Hook<AShooterGameMode>(0x838 / 8, ReadyToStartMatch);
     Hooking::Hook<AShooterGameMode>(0x668 / 8, SpawnDefaultPawnFor);
     Hooking::Hook<AShooterGameMode>(0x698 / 8, HandleStartingNewPlayer, HandleStartingNewPlayerOG);
+    Hooking::ExecHook(FindObject<UFunction>(L"/Script/ShooterGame.ShooterGameMode.AuthIsServerStreamingLevels"), AuthIsServerStreamingLevels);
 }
