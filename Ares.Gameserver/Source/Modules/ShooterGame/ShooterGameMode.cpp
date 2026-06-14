@@ -79,20 +79,12 @@ bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
     }
     return bReady;
 }
-void ClientDrawDebugSpheres(const TArray<struct FAresDebugSphereReplicated>& DebugSpheres);
-void ClientEndOnlineGame();
-void ClientForceSetControlRotation(const struct FRotator& NewRotation);
-void ClientGamePhaseBegin(EAresGamePhase NewPhase);
-void ClientGamePhaseEnded(EAresGamePhase OldPhase);
-void ClientGameStarted();
-void ClientOnWinningTeam(const class UBaseTeamComponent* WinningTeam);
-void ClientReceiveRemoteCharacterUpdates(const TArray<struct FRemoteCharacterUpdate>& AllyRemoteCharacterUpdates, const TArray<struct FRemoteCharacterUpdate>& EnemyAndNeutralRemoteCharacterUpdates);
-void ClientReceiveRemoteCharacterUpdatesNoAlly(const TArray<struct FRemoteCharacterUpdate>& EnemyAndNeutralRemoteCharacterUpdates);
-void ClientSaveRiotProfiling();
-void ClientSendSystemMessage(class APlayerState* SourcePlayerState, class APlayerState* TargetPlayerState, const class FText& S);
-void ClientStartOnlineGame();
+
 APawn* ShooterGameMode::SpawnDefaultPawnFor(AShooterGameMode* _this, AShooterPlayerController* NewPlayer, AActor* StartSpot)
 {
+    AShooterPlayerState* PlayerState = NewPlayer->PlayerState->Cast<AShooterPlayerState>();
+    AShooterGameState* GameState = _this->GameState->Cast<AShooterGameState>();
+
     APawn* Pawn = (APawn*)SpawnActor(_this->GetDefaultPawnClassForController(NewPlayer), StartSpot->GetTransform(), NewPlayer, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 
     while (!Pawn)
@@ -101,31 +93,79 @@ APawn* ShooterGameMode::SpawnDefaultPawnFor(AShooterGameMode* _this, AShooterPla
         if (PlayerStart)
             Pawn = (APawn*)SpawnActor(_this->GetDefaultPawnClassForController(NewPlayer), StartSpot->GetTransform(), NewPlayer, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
     }
-    printf("[Runtime] SpawnDefaultPawnFor called: pawn: %s\n", Pawn->GetName().c_str());
+
+    GameState->MulticastSetPhase(EAresGamePhase::GameStarted);
 
     NewPlayer->CachedShooterCharacter = Pawn->Cast<AShooterCharacter>();
-    NewPlayer->Pawn = Pawn;
-    NewPlayer->CachedShooterCharacter->SetOwner(NewPlayer);
-    NewPlayer->AuthPossessSpawnedCharacter();
-    NewPlayer->OnCharacterRespawned.Process(NewPlayer->CachedShooterCharacter);
-    NewPlayer->ClientStartOnlineGame();
-    NewPlayer->ClientGamePhaseBegin(EAresGamePhase::GameStarted);
-    NewPlayer->ClientGameStarted();
-    _this->OnPhaseChanged(EAresGamePhase::GameStarted);
-    _this->GameState->Cast<AShooterGameState>()->MulticastSetPhase(EAresGamePhase::GameStarted);
-    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->PossessedCharacter = NewPlayer->CachedShooterCharacter;
-    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->SpawnedCharacterState.SpawnedCharacter = NewPlayer->CachedShooterCharacter;
-    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->SpawnedCharacterState.bIsAlive = true;
-    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->OnRep_PossessedCharacter();
-    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->OnRep_SpawnedCharacterState({});
-    NewPlayer->PlayerViewTargetMode = EAresPlayerViewTargetMode::WatchPossessed;
-    NewPlayer->OnRep_ViewTargetMode();
-    NewPlayer->CachedShooterCharacter->UpdatePawnMeshes();
-    NewPlayer->CachedShooterCharacter->UpdateTeam();
-    NewPlayer->CachedShooterCharacter->UpdateTeamColorsAndThemes();
+    PlayerState->PossessedCharacter = NewPlayer->CachedShooterCharacter;
+    PlayerState->SpawnedCharacterState.SpawnedCharacter = NewPlayer->CachedShooterCharacter;
+    PlayerState->SpawnedCharacterState.bIsAlive = true;
+    PlayerState->OnRep_PossessedCharacter();
+    PlayerState->OnRep_SpawnedCharacterState({});
+
+    NewPlayer->PlayerViewTarget = Pawn;
+    NewPlayer->OnRep_ViewTarget(nullptr);
+
+auto Equippables = NewPlayer->CachedShooterCharacter->StartingEquippableClasses;
+
+    for (int i = 0; i < Equippables.Num(); i++)
+    {
+        TSubclassOf<AAresEquippable> EquippableClass = Equippables[i];
+        if (!EquippableClass)
+            continue;
+
+        AAresEquippable* Equippable = (AAresEquippable*)SpawnActor(EquippableClass, Pawn->GetTransform(), Pawn, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+        if (!Equippable)
+            continue;
+
+        uint8 SlotIndex = (uint8)Equippable->EquippableSlot;
+
+        NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[SlotIndex]->Contents = Equippable;
+        NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[SlotIndex]->SlotType = Equippable->EquippableSlot;
+    }
+
+    AAresEquippable* Melee = NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[(uint8)EAresItemSlot::Melee]->Contents->Cast<AAresEquippable>();
+        
+    NewPlayer->CachedShooterCharacter->Inventory->OnRep_ItemSlots();
+    NewPlayer->CachedShooterCharacter->OnInventoryItemsChanged();
+
+    NewPlayer->CachedShooterCharacter->Inventory->SetDesiredEquippable(Melee, EEquipSpeed::Instant, EEquipSource::GrantEquippable);
+    NewPlayer->CachedShooterCharacter->Inventory->CurrentEquippable = Melee;
+    NewPlayer->CachedShooterCharacter->Inventory->CurrentEquippable->MyPawn = NewPlayer->CachedShooterCharacter;
+    NewPlayer->CachedShooterCharacter->Inventory->EquippableChange.Timestamp.Character = NewPlayer->CachedShooterCharacter;
+    NewPlayer->CachedShooterCharacter->Inventory->EquippableChange.Timestamp.RespawnNumber = 0;
+    NewPlayer->CachedShooterCharacter->Inventory->EquippableChange.Timestamp.NetTimestamp = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+    NewPlayer->CachedShooterCharacter->Inventory->EquippableChange.NewCurrentEquippable = Melee;
+    NewPlayer->CachedShooterCharacter->Inventory->CurrentEquippable->AttributeOwner = NewPlayer->CachedShooterCharacter;
+    NewPlayer->CachedShooterCharacter->Inventory->CurrentEquippable->ClientItemEquipped();
+    NewPlayer->CachedShooterCharacter->Inventory->LatestDesiredEquippableSlot = EAresItemSlot::Melee;
+
+    FPendingEquippableChange PendingChange;
+    PendingChange.NewCurrentEquippable = Melee;
+    PendingChange.Timestamp.Character = NewPlayer->CachedShooterCharacter;
+    PendingChange.Timestamp.RespawnNumber = 0;
+    PendingChange.Timestamp.NetTimestamp = UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+
+    NewPlayer->CachedShooterCharacter->Inventory->PendingEquippableChanges.Add(PendingChange);
+    NewPlayer->CachedShooterCharacter->Inventory->UpdatePendingEquippableChange(UGameplayStatics::GetTimeSeconds(UWorld::GetWorld()));
+    NewPlayer->CachedShooterCharacter->Inventory->OnRep_EquippableChange();
+
+    NewPlayer->CachedShooterCharacter->Inventory->AuthCorrectionState = EServerCorrectionState::CorrectionIssued;
+    NewPlayer->CachedShooterCharacter->Inventory->OwningClientCurrentCorrectionIndex = 0;
+    NewPlayer->CachedShooterCharacter->Inventory->AuthServerCorrectRepVariables.CorrectionIndex = 0;
+    NewPlayer->CachedShooterCharacter->Inventory->AuthServerCorrectRepVariables.CurrentEquippable = Melee;
+    NewPlayer->CachedShooterCharacter->Inventory->ClientHandleEquippableDisagreement(Melee, 0);
+
+    NewPlayer->CachedShooterCharacter->Inventory->bInitialServerCorrectionSent = true;
+    NewPlayer->CachedShooterCharacter->Inventory->bInitialServerCorrectionProcessed = true;
+    NewPlayer->CachedShooterCharacter->Inventory->AuthCorrectionState = EServerCorrectionState::Agreement;
+    NewPlayer->CachedShooterCharacter->Inventory->ServerRequestCorrection(0);
+    NewPlayer->CachedShooterCharacter->Inventory->ClientOnEquippableAdded(Melee);
+    NewPlayer->CachedShooterCharacter->InputStateComponent->OnEquippableChanged(Melee);
+    NewPlayer->CachedShooterCharacter->InputStateComponent->CurrentEquippableTarget = Melee;
 
     printf("[Runtime] SpawnDefaultPawnFor x=%f, y=%f, z=%f\n", StartSpot->K2_GetActorLocation().X, StartSpot->K2_GetActorLocation().Y, StartSpot->K2_GetActorLocation().Z);
-    
+
     return Pawn;
 }
 
@@ -139,22 +179,15 @@ void ShooterGameMode::HandleStartingNewPlayer(AShooterGameMode* _this, AShooterP
     HandleStartingNewPlayerOG(_this, NewPlayer);
 }
 
-bool AuthIsServerStreamingLevels(AShooterGameMode* _this, FFrame* Stack, bool* Ret)
-{
-    printf("[Runtime] AuthIsServerStreamingLevels called");
-    return *Ret = false;
-}
-
-char(*NotifyControlMessageOG)(__int64 a1, __int64 a2, unsigned __int8 a3, __int64 a4);
-char __fastcall NotifyControlMessage(__int64 a1, __int64 a2, unsigned __int8 a3, __int64 a4)
-{
-    printf("[Runtime] NotifyControlMessage called, type: %d\n", a3);
-    return NotifyControlMessageOG(a1, a2, a3, a4);
-}
-
 UClass* GetDefaultPawnClassForController(AShooterGameMode* _this, AController* InController)
 {
     return FindObject<UClass>(L"/Game/Characters/Wushu/Wushu_PC.Wushu_PC_C");
+}
+
+float AuthGetPhaseRemainingTime(AShooterGameMode* _this)
+{
+    AShooterGameState* GameState = _this->GameState->Cast<AShooterGameState>();
+    return 0.0f - UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
 }
 
 void ShooterGameMode::Init()
@@ -162,8 +195,7 @@ void ShooterGameMode::Init()
     Hooking::Hook<AShooterGameMode>(0x838 / 8, ReadyToStartMatch);
     Hooking::Hook<AShooterGameMode>(0x668 / 8, SpawnDefaultPawnFor);
     Hooking::Hook<AShooterGameMode>(0x698 / 8, HandleStartingNewPlayer, HandleStartingNewPlayerOG);
-    Hooking::ExecHook(FindObject<UFunction>(L"/Script/ShooterGame.ShooterGameMode.AuthIsServerStreamingLevels"), AuthIsServerStreamingLevels);
-    Hooking::Hook(ImageBase + 0x3A74410, NotifyControlMessage, NotifyControlMessageOG);
+    Hooking::Hook(ImageBase + 0x19FFC00, AuthGetPhaseRemainingTime);
     Hooking::Hook<AShooterGameMode>(0x778 / 8, AGameMode::GetDefaultObj()->VTable[0x778 / 8]); //postlogin, fuck you riot..
     Hooking::Hook<AShooterGameMode>(0x7A8 / 8, AGameMode::GetDefaultObj()->VTable[0x7A8 / 8]); // restartplayer
     Hooking::Hook<AShooterGameMode>(0x6A8 / 8, GetDefaultPawnClassForController);

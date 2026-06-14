@@ -238,3 +238,22 @@ public:
         Code = (uint8_t*)(__int64(Code) + (bool)Code);
     }
 };
+
+template <typename T>
+__forceinline std::vector<T*> GetObjectsOfClass()
+{
+    std::vector<T*> Objects;
+    for (int i = 0; i < UObject::GObjects->Num(); i++)
+    {
+        auto Object = BasicFilesImpleUtils::GetObjectByIndex(i);
+
+        if (!Object)
+            continue;
+
+        if (Object->IsA(T::StaticClass()))
+        {
+            Objects.push_back((T*)Object);
+        }
+    }
+    return Objects;
+}
