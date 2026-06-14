@@ -21,6 +21,11 @@ void* ProcessEvent(UObject* Obj, UFunction* Function, void* Params)
             LoggedFunctions.push_back(FunctionName);
         }
 
+        if (FunctionName.find("oordinatedHUDModel.HandlePlayerStateListUpdated") != std::string::npos)
+        {
+            return nullptr;
+        }
+
         logFile << FunctionName << std::endl;
     }
 
@@ -41,6 +46,7 @@ void MainThread()
 
     printf("[Runtime] Opening ascent!\n");
     UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Ascent/Ascent")), false, TEXT(""));
+   // UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Poveglia/Range?game=/Game/GameModes/ShootingRange/ShootingRangeGameMode.ShootingRangeGameMode_C")), false, TEXT(""));
    // UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/PregameV2/CharacterSelectPersistentLevel")), true, TEXT(""));
 }
 

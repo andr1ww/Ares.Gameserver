@@ -79,25 +79,62 @@ bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
     }
     return bReady;
 }
-
-APawn* ShooterGameMode::SpawnDefaultPawnFor(AShooterGameMode* GameMode, AAresPlayerController* NewPlayer, AActor* StartSpot)
+void ClientDrawDebugSpheres(const TArray<struct FAresDebugSphereReplicated>& DebugSpheres);
+void ClientEndOnlineGame();
+void ClientForceSetControlRotation(const struct FRotator& NewRotation);
+void ClientGamePhaseBegin(EAresGamePhase NewPhase);
+void ClientGamePhaseEnded(EAresGamePhase OldPhase);
+void ClientGameStarted();
+void ClientOnWinningTeam(const class UBaseTeamComponent* WinningTeam);
+void ClientReceiveRemoteCharacterUpdates(const TArray<struct FRemoteCharacterUpdate>& AllyRemoteCharacterUpdates, const TArray<struct FRemoteCharacterUpdate>& EnemyAndNeutralRemoteCharacterUpdates);
+void ClientReceiveRemoteCharacterUpdatesNoAlly(const TArray<struct FRemoteCharacterUpdate>& EnemyAndNeutralRemoteCharacterUpdates);
+void ClientSaveRiotProfiling();
+void ClientSendSystemMessage(class APlayerState* SourcePlayerState, class APlayerState* TargetPlayerState, const class FText& S);
+void ClientStartOnlineGame();
+APawn* ShooterGameMode::SpawnDefaultPawnFor(AShooterGameMode* _this, AShooterPlayerController* NewPlayer, AActor* StartSpot)
 {
-    printf("[Runtime] SpawnDefaultPawnFor called");
-    APawn* Pawn = (APawn*)SpawnActor(GameMode->GetDefaultPawnClassForController(NewPlayer), StartSpot->GetTransform(), NewPlayer, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+    APawn* Pawn = (APawn*)SpawnActor(_this->GetDefaultPawnClassForController(NewPlayer), StartSpot->GetTransform(), NewPlayer, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 
     while (!Pawn)
     {
-        auto PlayerStart = GameMode->ChoosePlayerStart(NewPlayer);
+        auto PlayerStart = _this->ChoosePlayerStart(NewPlayer);
         if (PlayerStart)
-            Pawn = (APawn*)SpawnActor(GameMode->GetDefaultPawnClassForController(NewPlayer), StartSpot->GetTransform(), NewPlayer, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+            Pawn = (APawn*)SpawnActor(_this->GetDefaultPawnClassForController(NewPlayer), StartSpot->GetTransform(), NewPlayer, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
     }
+    printf("[Runtime] SpawnDefaultPawnFor called: pawn: %s\n", Pawn->GetName().c_str());
+
+    NewPlayer->CachedShooterCharacter = Pawn->Cast<AShooterCharacter>();
+    NewPlayer->Pawn = Pawn;
+    NewPlayer->CachedShooterCharacter->SetOwner(NewPlayer);
+    NewPlayer->AuthPossessSpawnedCharacter();
+    NewPlayer->OnCharacterRespawned.Process(NewPlayer->CachedShooterCharacter);
+    NewPlayer->ClientStartOnlineGame();
+    NewPlayer->ClientGamePhaseBegin(EAresGamePhase::GameStarted);
+    NewPlayer->ClientGameStarted();
+    _this->OnPhaseChanged(EAresGamePhase::GameStarted);
+    _this->GameState->Cast<AShooterGameState>()->MulticastSetPhase(EAresGamePhase::GameStarted);
+    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->PossessedCharacter = NewPlayer->CachedShooterCharacter;
+    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->SpawnedCharacterState.SpawnedCharacter = NewPlayer->CachedShooterCharacter;
+    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->SpawnedCharacterState.bIsAlive = true;
+    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->OnRep_PossessedCharacter();
+    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->OnRep_SpawnedCharacterState({});
+    NewPlayer->PlayerViewTargetMode = EAresPlayerViewTargetMode::WatchPossessed;
+    NewPlayer->OnRep_ViewTargetMode();
+    NewPlayer->CachedShooterCharacter->UpdatePawnMeshes();
+    NewPlayer->CachedShooterCharacter->UpdateTeam();
+    NewPlayer->CachedShooterCharacter->UpdateTeamColorsAndThemes();
+
+    printf("[Runtime] SpawnDefaultPawnFor x=%f, y=%f, z=%f\n", StartSpot->K2_GetActorLocation().X, StartSpot->K2_GetActorLocation().Y, StartSpot->K2_GetActorLocation().Z);
     
     return Pawn;
 }
 
 void (*HandleStartingNewPlayerOG)(AShooterGameMode* _this, AAresPlayerController* NewPlayer);
-void ShooterGameMode::HandleStartingNewPlayer(AShooterGameMode* _this, AAresPlayerController* NewPlayer)
+void ShooterGameMode::HandleStartingNewPlayer(AShooterGameMode* _this, AShooterPlayerController* NewPlayer)
 {
+    _this->bStartPlayersAsSpectators = false; 
+    NewPlayer->MatchID = L"88a1b12a-52ac-42b6-b443-a59bee67977e";
+
     printf("[Runtime] HandleStartingNewPlayer called");
     HandleStartingNewPlayerOG(_this, NewPlayer);
 }
@@ -106,6 +143,13 @@ bool AuthIsServerStreamingLevels(AShooterGameMode* _this, FFrame* Stack, bool* R
 {
     printf("[Runtime] AuthIsServerStreamingLevels called");
     return *Ret = false;
+}
+
+char(*NotifyControlMessageOG)(__int64 a1, __int64 a2, unsigned __int8 a3, __int64 a4);
+char __fastcall NotifyControlMessage(__int64 a1, __int64 a2, unsigned __int8 a3, __int64 a4)
+{
+    printf("[Runtime] NotifyControlMessage called, type: %d\n", a3);
+    return NotifyControlMessageOG(a1, a2, a3, a4);
 }
 
 UClass* GetDefaultPawnClassForController(AShooterGameMode* _this, AController* InController)
@@ -118,6 +162,9 @@ void ShooterGameMode::Init()
     Hooking::Hook<AShooterGameMode>(0x838 / 8, ReadyToStartMatch);
     Hooking::Hook<AShooterGameMode>(0x668 / 8, SpawnDefaultPawnFor);
     Hooking::Hook<AShooterGameMode>(0x698 / 8, HandleStartingNewPlayer, HandleStartingNewPlayerOG);
-    Hooking::Hook<AShooterGameMode>(0x6A8 / 8, GetDefaultPawnClassForController);
     Hooking::ExecHook(FindObject<UFunction>(L"/Script/ShooterGame.ShooterGameMode.AuthIsServerStreamingLevels"), AuthIsServerStreamingLevels);
+    Hooking::Hook(ImageBase + 0x3A74410, NotifyControlMessage, NotifyControlMessageOG);
+    Hooking::Hook<AShooterGameMode>(0x778 / 8, AGameMode::GetDefaultObj()->VTable[0x778 / 8]); //postlogin, fuck you riot..
+    Hooking::Hook<AShooterGameMode>(0x7A8 / 8, AGameMode::GetDefaultObj()->VTable[0x7A8 / 8]); // restartplayer
+    Hooking::Hook<AShooterGameMode>(0x6A8 / 8, GetDefaultPawnClassForController);
 }

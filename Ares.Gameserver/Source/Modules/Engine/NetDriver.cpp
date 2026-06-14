@@ -14,13 +14,14 @@ void NetDriver::TickFlush(UNetDriver* _this, float DeltaTime)
         AShooterPlayerController* PC = Connection->PlayerController->Cast<AShooterPlayerController>();
         if (!PC)
             continue;
-        static bool bFirst = true;
+        static bool bFirst = false;
         if (!bFirst)
             continue;
 
         if (bFirst)
         {
             printf("[Runtime] PlayerController: %s\n", PC->GetName().c_str());
+            printf("[Runtime] CachedShooterCharacter: %s\n", PC->CachedShooterCharacter ? PC->CachedShooterCharacter->GetName().c_str() : "None");
             bFirst = false;
         }
         _this->World->AuthorityGameMode->HandleStartingNewPlayer(PC);

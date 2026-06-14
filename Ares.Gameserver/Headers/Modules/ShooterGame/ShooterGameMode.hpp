@@ -8,6 +8,6 @@ public:
 
 private:
     static bool ReadyToStartMatch(AShooterGameMode* _this);
-    static APawn* SpawnDefaultPawnFor(AShooterGameMode* GameMode, AAresPlayerController* NewPlayer, AActor* StartSpot);
-    static void HandleStartingNewPlayer(AShooterGameMode* _this, AAresPlayerController* NewPlayer);
+    static APawn* SpawnDefaultPawnFor(AShooterGameMode* GameMode, AShooterPlayerController* NewPlayer, AActor* StartSpot);
+    static void HandleStartingNewPlayer(AShooterGameMode* _this, AShooterPlayerController* NewPlayer);
 };
