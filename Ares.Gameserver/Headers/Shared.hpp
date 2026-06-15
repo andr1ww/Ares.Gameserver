@@ -233,6 +233,43 @@ public:
     UField* PropertyChainForCompiledIn;
 
 public:
+    static inline auto Step = reinterpret_cast<void (*)(FFrame*, SDK::UObject*, void* const)>(ImageBase + 0x2487C90);
+    static inline auto StepExplicitProperty = reinterpret_cast<void (*)(FFrame*, void* const, SDK::UField*)>(ImageBase + 0x2487CC0);
+
+    void StepCompiledIn(void* const Result, bool ForceExplicitProp = false)
+    {
+        if (Code && !ForceExplicitProp)
+        {
+            Step(this, Object, Result);
+        }
+        else
+        {
+            UField* _Prop = PropertyChainForCompiledIn;
+            PropertyChainForCompiledIn = _Prop->Next;
+            StepExplicitProperty(this, Result, _Prop);
+        }
+    }
+
+    template <typename T>
+    T& StepCompiledInRef()
+    {
+        T TempVal{};
+        MostRecentPropertyAddress = nullptr;
+
+        if (Code)
+        {
+            Step(this, Object, &TempVal);
+        }
+        else
+        {
+            UField* _Prop = PropertyChainForCompiledIn;
+            PropertyChainForCompiledIn = _Prop->Next;
+            StepExplicitProperty(this, &TempVal, _Prop);
+        }
+
+        return MostRecentPropertyAddress ? *(T*)MostRecentPropertyAddress : TempVal;
+    }
+
     void IncrementCode()
     {
         Code = (uint8_t*)(__int64(Code) + (bool)Code);

@@ -1,5 +1,5 @@
 #include <pch.h>
-#include <Headers/Modules/ShooterGame/ShooterGameMode.hpp>
+#include <Headers/Modules/ShooterGame/ShooterGameMode.h>
 INIT_MODULE(ShooterGameMode);
 
 bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
@@ -93,7 +93,10 @@ APawn* ShooterGameMode::SpawnDefaultPawnFor(AShooterGameMode* _this, AShooterPla
             Pawn = (APawn*)SpawnActor(_this->GetDefaultPawnClassForController(NewPlayer), StartSpot->GetTransform(), NewPlayer, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
     }
 
-    GameState->MulticastSetPhase(EAresGamePhase::GameStarted);
+    GameState->MulticastSetPhase(EAresGamePhase::InRound);
+    GameState->Phase = EAresGamePhase::InRound;
+    _this->OnPhaseChange.Process(EAresGamePhase::InRound);
+    _this->OnPlayerSpawned.Process(Pawn);
 
     NewPlayer->CachedShooterCharacter = Pawn->Cast<AShooterCharacter>();
     PlayerState->PossessedCharacter = NewPlayer->CachedShooterCharacter;
@@ -113,15 +116,7 @@ APawn* ShooterGameMode::SpawnDefaultPawnFor(AShooterGameMode* _this, AShooterPla
         if (!EquippableClass)
             continue;
 
-        AAresEquippable* Equippable = (AAresEquippable*)SpawnActor(EquippableClass, Pawn->GetTransform(), Pawn, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-        if (!Equippable)
-            continue;
-
-        uint8 SlotIndex = (uint8)Equippable->EquippableSlot;
-
-        NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[SlotIndex]->Contents = Equippable;
-        NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[SlotIndex]->SlotType = Equippable->EquippableSlot;
-        NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[SlotIndex]->OnRep_Contents();
+        NewPlayer->CachedShooterCharacter->Inventory->AuthCreateAndAddEquippable(EquippableClass);
     }
 
     AAresEquippable* Melee = NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[(uint8)EAresItemSlot::Melee]->Contents->Cast<AAresEquippable>();
