@@ -17,7 +17,7 @@ AAresEquippable* AresInventory::AuthCreateAndAddEquippable(UAresInventory* _this
         return nullptr;
     }
 
-    AAresItem* Item = _this->AuthCreateAndAddItem(EquippableClass, EInventoryTransaction::Other, ClassDefaultObject->EquippableSlot);
+    AAresItem* Item = AuthCreateAndAddItem(_this, EquippableClass, EInventoryTransaction::Other, ClassDefaultObject->EquippableSlot);
     if (!Item)
     {
         printf("[Runtime] AuthCreateAndAddEquippable: failed to create item for equippable class %s\n", EquippableClass->GetName().c_str());
