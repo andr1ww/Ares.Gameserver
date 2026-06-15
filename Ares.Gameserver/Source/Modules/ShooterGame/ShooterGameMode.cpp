@@ -26,7 +26,7 @@ bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
     bool bReady = UWorld::GetWorld()->NetDriver ? UWorld::GetWorld()->NetDriver->ClientConnections.Num() > 0 : false;
     if (bReady && bFirst)
     {
-        bFirst = false;
+    /*    bFirst = false;
 
         UStateComponent* StateComponent = _this->StateMachine->GetCurrentState();
         if (StateComponent)
@@ -75,7 +75,7 @@ bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
                     }
                 }
             }
-        }
+        }*/
     }
     return bReady;
 }
@@ -106,7 +106,7 @@ APawn* ShooterGameMode::SpawnDefaultPawnFor(AShooterGameMode* _this, AShooterPla
     NewPlayer->PlayerViewTarget = Pawn;
     NewPlayer->OnRep_ViewTarget(nullptr);
 
-auto Equippables = NewPlayer->CachedShooterCharacter->StartingEquippableClasses;
+    auto Equippables = NewPlayer->CachedShooterCharacter->StartingEquippableClasses;
 
     for (int i = 0; i < Equippables.Num(); i++)
     {
@@ -122,6 +122,7 @@ auto Equippables = NewPlayer->CachedShooterCharacter->StartingEquippableClasses;
 
         NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[SlotIndex]->Contents = Equippable;
         NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[SlotIndex]->SlotType = Equippable->EquippableSlot;
+        NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[SlotIndex]->OnRep_Contents();
     }
 
     AAresEquippable* Melee = NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[(uint8)EAresItemSlot::Melee]->Contents->Cast<AAresEquippable>();
@@ -187,7 +188,7 @@ UClass* GetDefaultPawnClassForController(AShooterGameMode* _this, AController* I
 float AuthGetPhaseRemainingTime(AShooterGameMode* _this)
 {
     AShooterGameState* GameState = _this->GameState->Cast<AShooterGameState>();
-    return 0.0f - UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
+    return 20.0f - UGameplayStatics::GetTimeSeconds(UWorld::GetWorld());
 }
 
 void ShooterGameMode::Init()

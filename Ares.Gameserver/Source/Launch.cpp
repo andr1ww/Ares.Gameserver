@@ -51,9 +51,9 @@ void MainThread()
     Hooking::HookEvery<UAbilitySystemComponent>(0x7F8 / 8, &InternalServerTryActivateAbility);
 
     printf("[Runtime] Opening ascent!\n");
-    UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Duality/Duality")), false, TEXT(""));
+   // UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Duality/Duality")), false, TEXT(""));
 
-    //    UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Ascent/Ascent")), false, TEXT(""));
+        UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Ascent/Ascent")), false, TEXT(""));
     //UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/Poveglia/Range?game=/Game/GameModes/ShootingRange/ShootingRangeGameMode.ShootingRangeGameMode_C")), false, TEXT(""));
    // UGameplayStatics::OpenLevel(UWorld::GetWorld(), FName(TEXT("/Game/Maps/PregameV2/CharacterSelectPersistentLevel")), true, TEXT(""));
 }
