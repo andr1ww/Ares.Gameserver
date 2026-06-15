@@ -71,7 +71,6 @@ bool ShooterGameMode::ReadyToStartMatch(AShooterGameMode* _this)
 
                         _this->DisablePlayerStartsByTagAndAlliance(TEXT("None"), Team, EAresAlliance::Alliance_Neutral);
                         _this->EnablePlayerStartsByTagAndAlliance(TEXT("None"), Team, EAresAlliance::Alliance_Ally);
-
                     }
                 }
             }
@@ -126,7 +125,7 @@ APawn* ShooterGameMode::SpawnDefaultPawnFor(AShooterGameMode* _this, AShooterPla
     }
 
     AAresEquippable* Melee = NewPlayer->CachedShooterCharacter->Inventory->ItemSlots[(uint8)EAresItemSlot::Melee]->Contents->Cast<AAresEquippable>();
-        
+
     NewPlayer->CachedShooterCharacter->Inventory->OnRep_ItemSlots();
     NewPlayer->CachedShooterCharacter->OnInventoryItemsChanged();
 
@@ -173,9 +172,9 @@ APawn* ShooterGameMode::SpawnDefaultPawnFor(AShooterGameMode* _this, AShooterPla
 void (*HandleStartingNewPlayerOG)(AShooterGameMode* _this, AAresPlayerController* NewPlayer);
 void ShooterGameMode::HandleStartingNewPlayer(AShooterGameMode* _this, AShooterPlayerController* NewPlayer)
 {
-    _this->bStartPlayersAsSpectators = false; 
+    _this->bStartPlayersAsSpectators = false;
     NewPlayer->MatchID = L"88a1b12a-52ac-42b6-b443-a59bee67977e";
-
+    NewPlayer->PlayerState->Cast<AShooterPlayerState>()->DesiredClass = FGuid(0xadd6443a, 0x41bde414, 0xf6ade58d, 0x267f4e95);
     printf("[Runtime] HandleStartingNewPlayer called");
     HandleStartingNewPlayerOG(_this, NewPlayer);
 }
@@ -197,7 +196,7 @@ void ShooterGameMode::Init()
     Hooking::Hook<AShooterGameMode>(0x668 / 8, SpawnDefaultPawnFor);
     Hooking::Hook<AShooterGameMode>(0x698 / 8, HandleStartingNewPlayer, HandleStartingNewPlayerOG);
     Hooking::Hook(ImageBase + 0x19FFC00, AuthGetPhaseRemainingTime);
-    Hooking::Hook<AShooterGameMode>(0x778 / 8, AGameMode::GetDefaultObj()->VTable[0x778 / 8]); //postlogin, fuck you riot..
+    Hooking::Hook<AShooterGameMode>(0x778 / 8, AGameMode::GetDefaultObj()->VTable[0x778 / 8]); // postlogin, fuck you riot..
     Hooking::Hook<AShooterGameMode>(0x7A8 / 8, AGameMode::GetDefaultObj()->VTable[0x7A8 / 8]); // restartplayer
     Hooking::Hook<AShooterGameMode>(0x6A8 / 8, GetDefaultPawnClassForController);
 }
