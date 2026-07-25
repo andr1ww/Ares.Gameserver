@@ -8,5 +8,5 @@ Discord: https://discord.gg/bthSTrGaw5
 <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/798783ec-046b-4fff-b93f-edb1d5d20286" />
 
 ## Binaries
-Valorant's Client Exe (Decrypted): https://cloud.andr1ww.dev/VALORANT-Win64-Shipping.exe
-Placeholder stub.dll (rebuilds iat at runtime): https://cloud.andr1ww.dev/stub.dll
+* [Decrypted VALORANT exe](https://cloud.andr1ww.dev/VALORANT-Win64-Shipping.exe)
+* [Placeholder `stub.dll`](https://cloud.andr1ww.dev/stub.dll) | rebuilds the IAT at runtime
