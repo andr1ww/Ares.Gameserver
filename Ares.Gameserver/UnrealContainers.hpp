@@ -266,11 +266,11 @@ namespace UC
         template <typename SetType>
         class SetElement
         {
-        private:
+        public:
             template <typename SetDataType>
             friend class TSet;
 
-        private:
+        public:
             SetType Value;
             int32 HashNextId;
             int32 HashIndex;
@@ -314,18 +314,23 @@ namespace UC
     class FMemory
     {
     public:
-        static inline auto InternalRealloc = (void* (*)(void*, __int64, unsigned int))(ImageBase + 0x21CF6F0);
+        // lazy or it reads ImageBase before its init, static init order crash
+        static void* (*GetInternalRealloc())(void*, __int64, unsigned int)
+        {
+            static auto InternalRealloc = (void* (*)(void*, __int64, unsigned int))(ImageBase + 0x21CF6F0);
+            return InternalRealloc;
+        }
 
         template <typename T = void>
         static inline T* Realloc(void* Ptr, uint64 Size, uint32 Alignment = 0x0)
         {
-            return (T*)InternalRealloc(Ptr, Size, Alignment);
+            return (T*)GetInternalRealloc()(Ptr, Size, Alignment);
         }
 
         template <typename T>
         static inline T* ReallocForType(void* Ptr, uint64 Count)
         {
-            return (T*)InternalRealloc(Ptr, Count * sizeof(T), alignof(T));
+            return (T*)GetInternalRealloc()(Ptr, Count * sizeof(T), alignof(T));
         }
 
         template <typename T = void>
@@ -393,7 +398,7 @@ namespace UC
     class TArray
     {
     private:
-        template <typename ArrayElementType>
+        template <typename FriendArrayElementType>
         friend class TAllocatedArray;
 
         template <typename SparseArrayElementType>

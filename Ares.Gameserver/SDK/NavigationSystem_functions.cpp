@@ -8,6 +8,7 @@
 
 // Package: NavigationSystem
 
+#include <pch.h>
 #include "Basic.hpp"
 
 #include "NavigationSystem_classes.hpp"
@@ -945,4 +946,3 @@ bool ARecastNavMesh::K2_ReplaceAreaInTileBounds(const struct FBox& Bounds, TSubc
 }
 
 }
-

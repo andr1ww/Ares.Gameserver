@@ -315,8 +315,8 @@ uint8_t* Hooking::AllocateShellcodeRegion(void* targetAddr, size_t SizeOfShellco
 
     const uint64_t PageSize = SysInfo.dwPageSize;
     const uint64_t StartAddr = (uint64_t(targetAddr) & ~(PageSize - 1));
-    const uint64_t MinAddr = max(StartAddr - 0x7FFFFF00, (uint64_t)SysInfo.lpMinimumApplicationAddress);
-    const uint64_t MaxAddr = min(StartAddr + 0x7FFFFF00, (uint64_t)SysInfo.lpMaximumApplicationAddress);
+    const uint64_t MinAddr = (std::max)(StartAddr - 0x7FFFFF00, (uint64_t)SysInfo.lpMinimumApplicationAddress);
+    const uint64_t MaxAddr = (std::min)(StartAddr + 0x7FFFFF00, (uint64_t)SysInfo.lpMaximumApplicationAddress);
     const uint64_t StartPage = (StartAddr - (StartAddr % PageSize));
 
     for (auto& Block : Blocks)

@@ -7,7 +7,7 @@ inline std::vector<void (*)()> Tickers;
 #define INIT_MODULE(Name)                                                                                                                                                                                             \
     auto __InitterAdder_##Name = ([]()                                                                                                                                                                                \
     {                                                                                                                                                                                                                 \
-        Initters.push_back(Name## ::Init);                                                                                                                                                                            \
+        Initters.push_back(Name ::Init);                                                                                                                                                                              \
         return 1;                                                                                                                                                                                                     \
     })();
 
@@ -208,7 +208,7 @@ inline auto PickWeighted(IteratableType& Map, float (*RandFunc)(float), bool bCh
 template <typename T>
 static inline void Set(uintptr_t Address, T Value)
 {
-    *reinterpret_cast<T*>(__int64(Address)) = Value;
+    *reinterpret_cast<T*>((__int64)(Address)) = Value;
 }
 
 class FOutputDevice
@@ -233,20 +233,29 @@ public:
     UField* PropertyChainForCompiledIn;
 
 public:
-    static inline auto Step = reinterpret_cast<void (*)(FFrame*, SDK::UObject*, void* const)>(ImageBase + 0x2487C90);
-    static inline auto StepExplicitProperty = reinterpret_cast<void (*)(FFrame*, void* const, SDK::UField*)>(ImageBase + 0x2487CC0);
+    // lazy, static init order with ImageBase
+    static inline void (*GetStep())(FFrame*, SDK::UObject*, void* const)
+    {
+        static auto Step = reinterpret_cast<void (*)(FFrame*, SDK::UObject*, void* const)>(ImageBase + 0x2487C90);
+        return Step;
+    }
+    static inline void (*GetStepExplicitProperty())(FFrame*, void* const, SDK::UField*)
+    {
+        static auto StepExplicitProperty = reinterpret_cast<void (*)(FFrame*, void* const, SDK::UField*)>(ImageBase + 0x2487CC0);
+        return StepExplicitProperty;
+    }
 
     void StepCompiledIn(void* const Result, bool ForceExplicitProp = false)
     {
         if (Code && !ForceExplicitProp)
         {
-            Step(this, Object, Result);
+            GetStep()(this, Object, Result);
         }
         else
         {
             UField* _Prop = PropertyChainForCompiledIn;
             PropertyChainForCompiledIn = _Prop->Next;
-            StepExplicitProperty(this, Result, _Prop);
+            GetStepExplicitProperty()(this, Result, _Prop);
         }
     }
 
@@ -258,13 +267,13 @@ public:
 
         if (Code)
         {
-            Step(this, Object, &TempVal);
+            GetStep()(this, Object, &TempVal);
         }
         else
         {
             UField* _Prop = PropertyChainForCompiledIn;
             PropertyChainForCompiledIn = _Prop->Next;
-            StepExplicitProperty(this, &TempVal, _Prop);
+            GetStepExplicitProperty()(this, &TempVal, _Prop);
         }
 
         return MostRecentPropertyAddress ? *(T*)MostRecentPropertyAddress : TempVal;
@@ -272,7 +281,7 @@ public:
 
     void IncrementCode()
     {
-        Code = (uint8_t*)(__int64(Code) + (bool)Code);
+        Code = (uint8_t*)(((__int64)(Code)) + (bool)Code);
     }
 };
 

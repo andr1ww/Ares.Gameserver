@@ -121,6 +121,8 @@ AActor* SpawnActor(UClass* Class, FTransform Transform, AActor* Owner, ESpawnAct
     FActorSpawnParameters SpawnParameters{};
 
     SpawnParameters.Owner = Owner;
+    // abilities spawn with the item's instigator, MyPawn isnt enough
+    SpawnParameters.Instigator = Owner ? (Owner->IsA<APawn>() ? Owner : Owner->Instigator) : nullptr;
     SpawnParameters.bDeferConstruction = false;
     SpawnParameters.SpawnCollisionHandlingOverride = CollisionOverride;
 
@@ -134,6 +136,7 @@ AActor* SpawnActor(UClass* Class, FVector Loc, FRotator Rot, AActor* Owner, ESpa
     FActorSpawnParameters SpawnParameters{};
 
     SpawnParameters.Owner = Owner;
+    SpawnParameters.Instigator = Owner ? (Owner->IsA<APawn>() ? Owner : Owner->Instigator) : nullptr;
     SpawnParameters.bDeferConstruction = false;
     SpawnParameters.SpawnCollisionHandlingOverride = CollisionOverride;
 
