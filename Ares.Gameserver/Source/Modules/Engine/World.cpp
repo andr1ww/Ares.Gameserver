@@ -3,6 +3,7 @@
 #include <intrin.h>
 INIT_MODULE(World);
 
+// client copy is stripped
 bool World::Listen(UWorld* _this)
 {
     UEngine::GetEngine()->NetDriverDefinitions.Search([](FNetDriverDefinition& Def)
@@ -22,6 +23,11 @@ bool World::Listen(UWorld* _this)
     auto NetDriverName = FName(L"GameNetDriver");
 
     auto NetDriver = _this->NetDriver = CreateNetDriver(UEngine::GetEngine(), _this, NetDriverName);
+    if (!NetDriver)
+    {
+        Ares::Log("Listen: CreateNetDriver returned null");
+        return false;
+    }
 
     NetDriver->NetDriverName = NetDriverName;
     NetDriver->World = _this;
@@ -30,29 +36,31 @@ bool World::Listen(UWorld* _this)
         Collection.NetDriver = NetDriver;
 
     FURL URL;
-    URL.Port = 7777;
-        
-    FString Err;
+    URL.Port = Ares::Config().Port;
 
-    auto ret = InitListen(NetDriver, _this, &URL, false, Err);
+    FString Err;
+    const bool bListening = InitListen(NetDriver, _this, &URL, false, Err);
 
     SetWorld(NetDriver, _this);
 
-    printf("[Runtime] Listening!\n");
-    return ret;
+    Ares::Log("Listen: %s on udp/%d", bListening ? "listening" : "FAILED", URL.Port);
+    return bListening;
 }
 
 int (*GetNetModeOG)(UWorld* _this);
 int GetNetMode(UWorld* _this)
 {
     if (_this->NetDriver)
-        return 1; // NM_DedicatedServer
+    {
+        return Ares::Config().Mode == Ares::EMode::Standalone ? 2 : 1; // NM_ListenServer : NM_DedicatedServer
+    }
 
     return GetNetModeOG(_this);
 }
 
 void World::Init()
 {
+    AresBootLogLine("init: World");
     Hooking::Hook(ImageBase + 0x3A71D20, GetNetMode, GetNetModeOG); // GetNetMode
     Hooking::Rel32Hook(ImageBase + 0x3A04E7E, Listen);
 }

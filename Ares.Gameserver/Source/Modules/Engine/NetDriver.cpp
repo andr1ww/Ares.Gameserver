@@ -20,8 +20,8 @@ void NetDriver::TickFlush(UNetDriver* _this, float DeltaTime)
 
         if (bFirst)
         {
-            printf("[Runtime] PlayerController: %s\n", PC->GetName().c_str());
-            printf("[Runtime] CachedShooterCharacter: %s\n", PC->CachedShooterCharacter ? PC->CachedShooterCharacter->GetName().c_str() : "None");
+            Ares::Log("PlayerController: %s", PC->GetName().c_str());
+            Ares::Log("CachedShooterCharacter: %s", PC->CachedShooterCharacter ? PC->CachedShooterCharacter->GetName().c_str() : "None");
             bFirst = false;
         }
         _this->World->AuthorityGameMode->HandleStartingNewPlayer(PC);
@@ -46,7 +46,7 @@ int32 NetDriver::ServerReplicateActors(UNetDriver* _this, float DeltaSeconds)
         return 0;
     }
 
-    ++*(int32*)(__int64(_this) + 0x30C);
+    ++*(int32*)(((__int64)(_this)) + 0x30C);
     //ReplicationFrame++;
 
     const int32 NumClientsToTick = ServerReplicateActors_PrepConnections(_this, DeltaSeconds);
@@ -192,7 +192,7 @@ ULevel* GetLevel(AActor* Actor)
 
 static FNetworkObjectList& GetNetworkObjectList(UNetDriver* Driver)
 {
-    return *(*(class TSharedPtr<FNetworkObjectList>*)(__int64(Driver) + 0x758));
+    return *(*(class TSharedPtr<FNetworkObjectList>*)(((__int64)(Driver)) + 0x758));
 }
 
 
@@ -227,6 +227,7 @@ void NetDriver::ServerReplicateActors_BuildConsiderList(UNetDriver* _this, std::
 
 void NetDriver::Init()
 {
+    AresBootLogLine("init: NetDriver enter");
     Hooking::Hook(ImageBase + 0x3704C10, TickFlush, TickFlushOG); 
 }
 

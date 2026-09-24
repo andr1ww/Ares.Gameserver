@@ -143,7 +143,7 @@ class UClass* StaticBPGeneratedClassImpl()
 		if (ClassIdx == 0x0) [[unlikely]]
 			return SetClassIndex(BasicFilesImpleUtils::FindClassByFullName(Name), ClassIdx, ClassName);
 
-		UClass* ClassObj = static_cast<UClass*>(BasicFilesImpleUtils::GetObjectByIndex(ClassIdx));
+		UClass* ClassObj = reinterpret_cast<UClass*>(BasicFilesImpleUtils::GetObjectByIndex(ClassIdx));
 
 		/* Could use cast flags too to save some string comparisons */
 		if (!ClassObj || BasicFilesImpleUtils::GetObjFNameAsUInt64(ClassObj) != ClassName)
@@ -156,7 +156,7 @@ class UClass* StaticBPGeneratedClassImpl()
 		if (ClassIdx == 0x0) [[unlikely]]
 			return SetClassIndex(BasicFilesImpleUtils::FindClassByName(Name), ClassIdx, ClassName);
 
-		UClass* ClassObj = static_cast<UClass*>(BasicFilesImpleUtils::GetObjectByIndex(ClassIdx));
+		UClass* ClassObj = reinterpret_cast<UClass*>(BasicFilesImpleUtils::GetObjectByIndex(ClassIdx));
 
 		/* Could use cast flags too to save some string comparisons */
 		if (!ClassObj || BasicFilesImpleUtils::GetObjFNameAsUInt64(ClassObj) != ClassName)
@@ -795,8 +795,8 @@ template<typename FunctionSignature>
 class TDelegate
 {
 public:
-	struct InvalidUseOfTDelegate                  TemplateParamIsNotAFunctionSignature;              // 0x0000(0x0000)(NOT AUTO-GENERATED PROPERTY)
-	uint8                                         Pad_0[0x14];                                       // 0x0000(0x0014)(Fixing Struct Size After Last Property [ Dumper-7 ])
+	std::conditional_t<std::is_function_v<FunctionSignature>, int, struct InvalidUseOfTDelegate> TemplateParamIsNotAFunctionSignature;
+	uint8                                                                                         Pad_0[0x14];                                       // 0x0000(0x0014)(Fixing Struct Size After Last Property [ Dumper-7 ])
 };
 
 // Predefined struct TDelegate<Ret(Args...)>
@@ -814,7 +814,7 @@ template<typename FunctionSignature>
 class TMulticastInlineDelegate
 {
 public:
-	struct InvalidUseOfTMulticastInlineDelegate   TemplateParamIsNotAFunctionSignature;              // 0x0000(0x0014)(NOT AUTO-GENERATED PROPERTY)
+	std::conditional_t<std::is_function_v<FunctionSignature>, int, struct InvalidUseOfTMulticastInlineDelegate> TemplateParamIsNotAFunctionSignature;
 };
 
 // Predefined struct TMulticastInlineDelegate<Ret(Args...)>
@@ -826,34 +826,8 @@ public:
 	TArray<FScriptDelegate>                       InvocationList;                                    // 0x0000(0x0010)(NOT AUTO-GENERATED PROPERTY)
 
 public:
-    void Process(Args... args)
-    {
-        struct Params
-        {
-            std::tuple<std::remove_reference_t<Args>...> Data;
-            Params(Args&&... args)
-                : Data(std::forward<Args>(args)...)
-            {
-            }
-        } Arg(std::forward<Args>(args)...);
-
-        for (int i = 0; i < InvocationList.Num(); i++)
-        {
-            auto& ScriptDelegate = InvocationList[i];
-
-            ScriptDelegate.Object->ProcessEvent(ScriptDelegate.Object->Class->FindFunction(ScriptDelegate.FunctionName.ToString().c_str()), &Arg);
-        }
-    }
-
-    void Bind(UObject* Object, FName FunctionName)
-    {
-        FScriptDelegate NewDelegate;
-
-        NewDelegate.Object = Object;
-        NewDelegate.FunctionName = FunctionName;
-
-        InvocationList.Add(NewDelegate);
-    }
+    void Process(Args... args);
+    void Bind(UObject* Object, FName FunctionName);
 };
 
 #define UE_ENUM_OPERATORS(EEnumClass)																																	\

@@ -340,7 +340,7 @@ class UClass : public UStruct
 {
 public:
 	uint8                                         Pad_A0[0x20];                                      // 0x00A0(0x0020)(Fixing Size After Last Property [ Dumper-7 ])
-	enum class EClassCastFlags                    CastFlags;                                         // 0x00C0(0x0008)(NOT AUTO-GENERATED PROPERTY)
+	EClassCastFlags                               CastFlags;                                         // 0x00C0(0x0008)(NOT AUTO-GENERATED PROPERTY)
 	uint8                                         Pad_C8[0x40];                                      // 0x00C8(0x0040)(Fixing Size After Last Property [ Dumper-7 ])
 	class UObject*                                DefaultObject;                                     // 0x0108(0x0008)(NOT AUTO-GENERATED PROPERTY)
 	uint8                                         Pad_110[0x100];                                    // 0x0110(0x0100)(Fixing Struct Size After Last Property [ Dumper-7 ])
@@ -1161,6 +1161,45 @@ public:
 };
 static_assert(alignof(UTextProperty) == 0x000008, "Wrong alignment on UTextProperty");
 static_assert(sizeof(UTextProperty) == 0x000080, "Wrong size on UTextProperty");
+
+// moved from Basic.hpp, needs full UObject
+template<typename Ret, typename... Args>
+void TMulticastInlineDelegate<Ret(Args...)>::Process(Args... args)
+{
+	struct Params
+	{
+		std::tuple<std::remove_reference_t<Args>...> Data;
+		Params(Args&&... args)
+			: Data(std::forward<Args>(args)...)
+		{
+		}
+	} Arg(std::forward<Args>(args)...);
+
+	for (int i = 0; i < InvocationList.Num(); i++)
+	{
+		auto& ScriptDelegate = InvocationList[i];
+
+		// skip dead listeners, crashed on respawn without this
+		UObject* Target = ScriptDelegate.Object.Get();
+		if (!Target || !Target->Class)
+			continue;
+		UFunction* Function = Target->Class->FindFunction(ScriptDelegate.FunctionName.ToString().c_str());
+		if (!Function)
+			continue;
+		Target->ProcessEvent(Function, &Arg);
+	}
+}
+
+template<typename Ret, typename... Args>
+void TMulticastInlineDelegate<Ret(Args...)>::Bind(UObject* Object, FName FunctionName)
+{
+	FScriptDelegate NewDelegate;
+
+	NewDelegate.Object = Object;
+	NewDelegate.FunctionName = FunctionName;
+
+	InvocationList.Add(NewDelegate);
+}
 
 }
 

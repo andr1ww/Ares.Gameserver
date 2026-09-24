@@ -4,6 +4,7 @@ INIT_MODULE(PlayerPurchaseablesComponent);
 
 void PlayerPurchaseablesComponent::Init()
 {
+    AresBootLogLine("init: PlayerPurchaseablesComponent enter");
     Hooking::ExecHook(UPlayerPurchaseablesComponent::StaticClass()->FindFunction("AuthForceGivePurchasable"), AuthForceGivePurchasable);
 }
 
@@ -19,11 +20,11 @@ bool PlayerPurchaseablesComponent::AuthForceGivePurchasable(UPlayerPurchaseables
     UClass* ItemClass = _this->GetItemClassForPurchasable(PurchasableClass);
     if (!ItemClass)
     {
-        printf("[Runtime] AuthForceGivePurchasable: No item class found for purchasable %s\n", PurchasableClass->GetName().c_str());
+        Ares::Log("AuthForceGivePurchasable: No item class found for purchasable %s", PurchasableClass->GetName().c_str());
         return false;
     }
 
-    printf("[Runtime] AuthForceGivePurchasable called, Purchasable class: %s, Owner: %s\n", PurchasableClass->GetName().c_str(), _this->GetOwner()->GetName().c_str());
+    Ares::Log("AuthForceGivePurchasable called, Purchasable class: %s, Owner: %s", PurchasableClass->GetName().c_str(), _this->GetOwner()->GetName().c_str());
 
     return false;
 }

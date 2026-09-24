@@ -80,7 +80,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;ARES_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;ARES_EXPORTS;_CRT_SECURE_NO_WARNINGS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -101,7 +101,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;ARES_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;ARES_EXPORTS;_CRT_SECURE_NO_WARNINGS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -120,7 +120,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;ARES_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;ARES_EXPORTS;_CRT_SECURE_NO_WARNINGS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -141,7 +141,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;ARES_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;ARES_EXPORTS;_CRT_SECURE_NO_WARNINGS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -165,6 +165,38 @@
     <ClInclude Include="Headers\Modules\ShooterGame\ShooterGameMode.h" />
     <ClInclude Include="Headers\Shared.hpp" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Headers\AresRuntime.hpp" />
+    <ClInclude Include="Headers\Hooking\Hooking.hpp" />
+    <ClInclude Include="Headers\Hooking\hde64.hpp" />
+    <ClInclude Include="Headers\Hooking\table64.hpp" />
+    <ClInclude Include="Headers\Modules\ConsoleGuard.h" />
+    <ClInclude Include="Headers\Modules\DeveloperConsole.h" />
+    <ClInclude Include="Headers\Modules\Diagnostics.h" />
+    <ClInclude Include="Headers\Modules\Freecam.h" />
+    <ClInclude Include="Headers\Modules\LocalSettings.h" />
+    <ClInclude Include="Headers\Modules\OfflineAuthority.h" />
+    <ClInclude Include="Headers\Modules\PlatformEndpoint.h" />
+    <ClInclude Include="Headers\Modules\ScreenCleanup.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\BenjaminGeometry.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\BotPolicy.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\BotTactics.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\CustomSkins.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\LocalBots.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\LocalCharacterVisibility.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\LocalDamage.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\LocalDeath.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\LocalDrop.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\LocalForceModules.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\LocalSkins.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\LocalTeams.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\MapSurvey.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\MatchFlow.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\RoundReferee.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\TacticalGraph.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\TacticalMap.h" />
+    <ClInclude Include="Headers\Modules\ShooterGame\WeaponGuards.h" />
+    <ClInclude Include="Headers\Modules\VanguardBypass.h" />
+    <ClInclude Include="Headers\Reentrancy.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Hooking\hde64.cpp" />
@@ -186,6 +218,42 @@
     <ClCompile Include="Source\Modules\ShooterGame\Components\PlayerPurchaseablesComponent.cpp" />
     <ClCompile Include="Source\Modules\ShooterGame\ShooterGameMode.cpp" />
     <ClCompile Include="Source\Shared.cpp" />
+    <ClCompile Include="SDK\UMG_functions.cpp" />
+    <ClCompile Include="SDK\ProceduralMeshComponent_functions.cpp" />
+    <ClCompile Include="SDK\NavigationSystem_functions.cpp" />
+    <ClCompile Include="Source\AresRuntime.cpp" />
+    <ClCompile Include="Source\Modules\ConsoleGuard.cpp" />
+    <ClCompile Include="Source\Modules\Diagnostics.cpp" />
+    <ClCompile Include="Source\Modules\DeveloperConsole.cpp" />
+    <ClCompile Include="Source\Modules\LocalSettings.cpp" />
+    <ClCompile Include="Source\Modules\OfflineAuthority.cpp" />
+    <ClCompile Include="Source\Modules\PlatformEndpoint.cpp" />
+    <ClCompile Include="Source\Modules\ScreenCleanup.cpp" />
+    <ClCompile Include="Source\Modules\Freecam.cpp" />
+    <ClCompile Include="Source\Modules\VanguardBypass.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\MatchFlow.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\WeaponGuards.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\GameplayDiagnostics.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalEffects.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalDamage.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalSlowField.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalCharacterVisibility.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalSyncedTimers.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalForceModules.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalGameObjects.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalAbilityActivate.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalTeams.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalDeath.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalRadialDamage.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalBots.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\MapSurvey.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\TacticalMap.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\RoundReferee.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalSkins.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\CustomSkins.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\BenjaminGeometry.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalDrop.cpp" />
+    <ClCompile Include="Source\Modules\ShooterGame\LocalInteractions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Headers\Modules\ShooterGame\.gitkeep" />
